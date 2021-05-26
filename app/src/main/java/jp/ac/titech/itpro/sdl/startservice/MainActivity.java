@@ -5,16 +5,35 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.IntentFilter;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = MainActivity.class.getSimpleName();
+    private BroadcastReceiver receiver;
+    private IntentFilter filter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Log.d(TAG, "onCreate in " + Thread.currentThread());
         setContentView(R.layout.activity_main);
+
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent){
+                String action = intent.getAction();
+                if (action == null) { return; }
+                if (action.equals(Service3.ACTION_ANSWER)) {
+                    Log.d(TAG, "Receive from " + intent.getStringExtra(Service3.EXTRA_ANSWER));
+                }
+            }
+        };
+        filter = new IntentFilter();
+        filter.addAction(Service3.ACTION_ANSWER);
     }
 
     public void onClickTest1(View v) {
@@ -29,5 +48,24 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, Service2.class);
         intent.putExtra(Service2.EXTRA_MYARG, "Hello, Service2");
         startService(intent);
+    }
+
+    public void onClickTest3(View v) {
+        Log.d(TAG, "onClickTest3 in " + Thread.currentThread());
+        Intent intent = new Intent(this, Service3.class);
+        intent.putExtra(Service3.EXTRA_MYARG, "Hello, Service3");
+        startService(intent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(receiver, filter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(receiver);
     }
 }
